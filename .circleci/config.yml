@@ -399,7 +399,6 @@ jobs:
       - notify-slack
       # Here's where you will add some code to rollback on failure    
 
-
   deploy-backend:
     docker:
       #image that supports apk
