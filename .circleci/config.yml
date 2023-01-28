@@ -294,53 +294,17 @@ jobs:
       - destroy-environment
       - revert-migrations
       # Here's where you will add some code to rollback on failure  
-
-  configure-infrastructure:
-    docker:
-      # Docker image here that supports Ansible
-      - image: cimg/base:stable
-
-    steps:
-      # Checkout code from git
-      - checkout
-      # Add ssh keys with fingerprint
-      - add_ssh_keys:
-          fingerprints:
-            - "f2:ae:63:39:b1:9f:c7:65:56:3b:fc:43:40:1a:24:83"
-      # attach workspace
-      - attach_workspace:
-          at: ~/project
-
-      - install_ansible
-      - install_aws_cli
-      
-      - run:
-          name: Configure server
-          command: |
-            cat ~/project/.circleci/ansible/inventory.txt
-            cd .circleci/ansible
-            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/configure-server.yml
-      - notify-slack
-      - destroy-environment
-
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
-      - image: circleci/node:14.0.0
+      - image: circleci/node:13.8.0
     steps:
-      # Checkout code from git
       - checkout
-      - restore_cache:
-          key: backend-build
-      - attach_workspace:
-          at: ~/project
       - run:
           name: Run migrations
           command: |
             cd backend
-            cat .env
             npm install
-            npm run build
             npm run migrations > migrations_dump.txt
       - run:
           name: Send migration results to kvdb
@@ -349,30 +313,29 @@ jobs:
             then
              curl --insecure https://kvdb.io/33GxcCpH7rHocPuWALvF32/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
-      - destroy-environment
-      - revert-migrations
       - notify-slack
-
+      - destroy-environment 
+      - revert-migrations
+  
   deploy-frontend:
     docker:
-      # Docker image here that supports AWS CLI
       - image: cimg/base:stable
     steps:
-      # Checkout code from git
       - checkout
-      - add_ssh_keys:
-          fingerprints:
-            - "f2:ae:63:39:b1:9f:c7:65:56:3b:fc:43:40:1a:24:83"
-      # attach workspace
-      - attach_workspace:
-          at: ~/project
 
-      - install_ansible
-      - install_aws_cli
+      - add_ssh_keys:
+          fingerprints: 
+            - "f2:ae:63:39:b1:9f:c7:65:56:3b:fc:43:40:1a:24:83"
+      - attach_workspace:
+          at: ~/
+
       - install_nodejs
+      - install_aws_cli
+      - install_ansible
       - run:
           name: Get backend url
           command: |
+            # your code here
             export BACKEND_IP=$(aws ec2 describe-instances \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --filter Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} \
@@ -382,58 +345,43 @@ jobs:
             echo "API_URL = ${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
             cat frontend/.env
-
       - run:
           name: Deploy frontend objects
           command: |
             cd frontend
-            # sudo npm install -g npm@latest
-            # rm -rf node_modules
+            sudo npm install -g npm@latest
+            rm -rf node_modules
             npm install
             npm run build
-            #new line added below
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz ./dist
-            aws s3 cp ./dist "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      - notify-slack
       - destroy-environment
       - revert-migrations
-      - notify-slack
-      # Here's where you will add some code to rollback on failure    
 
+     
+                    
   deploy-backend:
     docker:
-      #image that supports apk
-    - image: python:3.7-alpine3.17  
-
+      - image: cimg/base:stable
     steps:
+      # Add ssh keys with fingerprint
+      # attach workspace
       - checkout
       - add_ssh_keys:
-          fingerprints: "f2:ae:63:39:b1:9f:c7:65:56:3b:fc:43:40:1a:24:83"
+          fingerprints: 
+            - "f2:ae:63:39:b1:9f:c7:65:56:3b:fc:43:40:1a:24:83"
       - attach_workspace:
-          at: ~/project
-
-
-      - run:
-          name: Install Dependencies
-          command: |
-            apk add --update tar gzip curl openssh
-            apk add --update nodejs npm
-            apk add --update ansible
-            apk add --update py-pip
-            pip install awscli
-            apk add --update jq
-            apk add --update git
-      - restore_cache:
-          key: backend-build
-
+          at: ~/
+      - install_nodejs
+      - install_aws_cli
+      - install_ansible
       - run:
           name: Deploy backend
           command: |
             cd backend
-
             npm i
             npm run build
             cd ..
-
             cd .circleci/ansible
             mkdir files
             cd files
@@ -443,24 +391,9 @@ jobs:
             echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
-
-            # cd backend
-            # npm i
-            # npm run build
-            # cd ..
-            # tar -C backend -czvf artifact.tar.gz .
-            # echo "Contents  of the root directory is -------"
-            # ls -al
-            # export BACKEND_IP=$(aws ec2 describe-instances --query "Reservations[*].Instances[*].PublicIpAddress" --filters "Name=tag:Name, Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text >> ~/project/.circleci/ansible/inventory.txt)
-            # cd .circleci/ansible
-            # echo "Contents  of the inventory.txt file is -------"
-            # cat inventory.txt
-            # ansible-playbook deploy-backend.yml -i inventory.txt
-            
       - notify-slack
       - destroy-environment
       - revert-migrations
-
 
 
   smoke-test:
@@ -499,8 +432,12 @@ jobs:
               else
                 exit 1
               fi
+      - notify-slack
       - destroy-environment
       - revert-migrations
+
+
+ 
 
   cloudfront-update:
     docker:
@@ -514,7 +451,7 @@ jobs:
             list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
             --no-paginate --output text)
             echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
-            curl https://kvdb.io/33GxcCpH7rHocPuWALvF32/old_workflow_id -d "${OLD_WORKFLOW_ID}"
+            curl https://kvdb.io/LtKPKZje552BWpvP638Kuk/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
           name: Update cloudfront distribution
           command: |
@@ -522,10 +459,10 @@ jobs:
             --template-file .circleci/files/cloudfront.yml \
             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
             --stack-name InitialStack
+      - notify-slack
       - destroy-environment
       - revert-migrations
-  #     Here's where you will add some code to rollback on failure  
-
+ 
 
   cleanup:
     docker:
@@ -540,12 +477,12 @@ jobs:
                 --query "StackSummaries[*].StackName" \
                 --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             echo Stack names: "${STACKS[@]}"
-            export OldWorkflowID=$(curl --insecure https://kvdb.io/33GxcCpH7rHocPuWALvF32/old_workflow_id)
+            export OldWorkflowID=$(curl --insecure https://kvdb.io/LtKPKZje552BWpvP638Kuk/old_workflow_id)
             echo Old Workflow ID: $OldWorkflowID
       - run:
           name: Remove old stacks and files
           command: |
-            export OldWorkflowID=$(curl --insecure https://kvdb.io/33GxcCpH7rHocPuWALvF32/old_workflow_id)
+            export OldWorkflowID=$(curl --insecure https://kvdb.io/LtKPKZje552BWpvP638Kuk/old_workflow_id)
             echo Old Workflow ID: $OldWorkflowID 
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
@@ -553,6 +490,8 @@ jobs:
               aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
             fi
+      - notify-slack
+
 
 workflows:
   default:
