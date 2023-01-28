@@ -287,9 +287,9 @@ jobs:
             curl -X PUT -d "${backend_url}" https://kvdb.io/LtKPKZje552BWpvP638Kuk/backend_url
             curl https://kvdb.io/LtKPKZje552BWpvP638Kuk/backend_url
       - persist_to_workspace:
-          root: ~/
+          root: ~/project
           paths:
-            - ~/project/.circleci/ansible/inventory.txt
+            - .circleci/ansible/inventory.txt
       - notify-slack
       - destroy-environment
       - revert-migrations
@@ -305,7 +305,7 @@ jobs:
           fingerprints:
             - "f2:ae:63:39:b1:9f:c7:65:56:3b:fc:43:40:1a:24:83"
       - attach_workspace:
-          at: ~/
+          at: ~/project
     
       - install_ansible    
       - install_aws_cli
@@ -327,7 +327,7 @@ jobs:
       - restore_cache:
           key: backend-build
       - attach_workspace:
-          at: ~/
+          at: ~/project
       - run:
           name: Run migrations
           command: |
@@ -357,7 +357,7 @@ jobs:
           fingerprints: 
             - "f2:ae:63:39:b1:9f:c7:65:56:3b:fc:43:40:1a:24:83"
       - attach_workspace:
-          at: ~/
+          at: ~/project
 
       - install_nodejs
       - install_aws_cli
@@ -401,7 +401,7 @@ jobs:
           fingerprints: 
             - "f2:ae:63:39:b1:9f:c7:65:56:3b:fc:43:40:1a:24:83"
       - attach_workspace:
-          at: ~/
+          at: ~/project
       - install_nodejs
       - install_aws_cli
       - install_ansible
@@ -435,8 +435,8 @@ jobs:
       - install_aws_cli
 
       - attach_workspace:
-          at: ~/
-
+          at: ~/project
+          
       - run:
           name: Backend smoke test.
           command: |
