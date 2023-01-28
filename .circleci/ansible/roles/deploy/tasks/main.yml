@@ -1,18 +1,18 @@
 ---
 - name: "Creates backend app directory"
   file:
-    path: ~/project/.circleci/ansible/roles/deploy/files/backend-app
+    path: ~/backend-app
     state: directory
 
 - name: "Unarchive backend files"
   unarchive:
-    src: ~/project/.circleci/ansible/roles/deploy/files/artifact.tar.gz
-    dest: ~/project/.circleci/ansible/roles/deploy/files/backend-app
+    src: ~/.circleci/ansible/files/artifact.tar.gz
+    dest: ~/backend-app
 
 
 - name: "Executing Node app with PM2"
   shell: |
-    cd ~/project/.circleci/ansible/roles/deploy/files/backend-app/dist
+    cd ~/backend-app/dist
     pm2 stop default
     pm2 start main.js
 
