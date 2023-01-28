@@ -289,7 +289,7 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - .circleci/ansible/inventory.txt
+            - ~/project/.circleci/ansible/inventory.txt
       - notify-slack
       - destroy-environment
       - revert-migrations
@@ -436,7 +436,7 @@ jobs:
 
       - attach_workspace:
           at: ~/
-          
+
       - run:
           name: Backend smoke test.
           command: |
