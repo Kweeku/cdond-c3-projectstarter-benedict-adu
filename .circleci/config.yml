@@ -429,13 +429,14 @@ jobs:
   smoke-test:
     docker:
       - image: cimg/base:stable
-      - attach_workspace:
     steps:
       - checkout
       - install_nodejs
       - install_aws_cli
+
       - attach_workspace:
           at: ~/
+          
       - run:
           name: Backend smoke test.
           command: |
