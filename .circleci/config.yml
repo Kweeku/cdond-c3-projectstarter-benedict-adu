@@ -294,7 +294,7 @@ jobs:
           paths:
             - .circleci/ansible/inventory.txt
       - notify-slack
-      - destroy-environment
+      # - destroy-environment
       - revert-migrations
       # Here's where you will add some code to rollback on failure  
 
@@ -318,7 +318,7 @@ jobs:
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
-      - destroy-environment
+      # - destroy-environment
       
   run-migrations:
     docker:
@@ -346,7 +346,7 @@ jobs:
              curl --insecure https://kvdb.io/LtKPKZje552BWpvP638Kuk/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
       - notify-slack
-      - destroy-environment
+      # - destroy-environment
       - revert-migrations
 
   
@@ -388,7 +388,7 @@ jobs:
             npm run build
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - notify-slack
-      - destroy-environment
+      # - destroy-environment
       - revert-migrations
 
      
@@ -408,6 +408,22 @@ jobs:
       - install_nodejs
       - install_aws_cli
       - install_ansible
+      
+      - run:
+          name: Add .env vars to backend distro
+          command: |
+            echo ENVIRONMENT=production > backend/.env
+            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/.env
+            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/.env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> backend/.env
+            echo TYPEORM_PORT=$TYPEORM_PORT >> backend/.env
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env
+            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> "backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> "backend/.env"
+            echo NODE_ENV=production >> "backend/.env"
+
       - run:
           name: Deploy backend
           command: |
@@ -435,7 +451,7 @@ jobs:
             ansible-playbook -i inventory.txt deploy-backend.yml
 
       - notify-slack
-      - destroy-environment
+      # - destroy-environment
       - revert-migrations
 
 
