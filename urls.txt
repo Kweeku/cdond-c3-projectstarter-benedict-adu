@@ -1,5 +1,5 @@
 [url01] -github repo: https://github.com/Kweeku/cdond-c3-projectstarter-benedict-adu
-[URL02] - S3 BUCKET: http://udapeople-0e781db.s3-website-us-east-1.amazonaws.com/#/employees
-[URL03] - CloudFront: http://d3aadi8087vqka.cloudfront.net/#/employees
-[URL04] - HealthyBackend: http://54.173.52.184:3030/api/status
+[URL02] - S3 BUCKET: http://udapeople-2f3db2a.s3-website-us-east-1.amazonaws.com/#/employees
+[URL03] - CloudFront: https://dpuc3h40imnwj.cloudfront.net/#/employees
+[URL04] - HealthyBackend: http://52.91.120.38:3030/api/status
 [url05] - prometheus server: http://ec2-18-235-243-160.compute-1.amazonaws.com:9090/graph
