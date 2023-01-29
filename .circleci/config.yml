@@ -294,7 +294,7 @@ jobs:
           paths:
             - .circleci/ansible/inventory.txt
       - notify-slack
-      # - destroy-environment
+      - destroy-environment
       - revert-migrations
       # Here's where you will add some code to rollback on failure  
 
@@ -318,7 +318,8 @@ jobs:
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
-      # - destroy-environment
+      - destroy-environment
+      - notify-slack
       
   run-migrations:
     docker:
@@ -346,7 +347,7 @@ jobs:
              curl --insecure https://kvdb.io/LtKPKZje552BWpvP638Kuk/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
       - notify-slack
-      # - destroy-environment
+      - destroy-environment
       - revert-migrations
 
   
@@ -388,7 +389,7 @@ jobs:
             npm run build
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - notify-slack
-      # - destroy-environment
+      - destroy-environment
       - revert-migrations
 
      
@@ -451,7 +452,7 @@ jobs:
             ansible-playbook -i inventory.txt deploy-backend.yml
 
       - notify-slack
-      # - destroy-environment
+      - destroy-environment
       - revert-migrations
 
 
@@ -495,8 +496,8 @@ jobs:
                 exit 1
               fi
       - notify-slack
-      # - destroy-environment
-      # - revert-migrations
+      - destroy-environment
+      - revert-migrations
 
 
  
